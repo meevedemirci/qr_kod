@@ -65,7 +65,7 @@
 
   <h2><i>Fotoğraf ve Videolarınızı Bekliyoruz</i></h2>
 
-  <input type="text" id="username" placeholder="Adın (zorunlu)">
+  <input type="text" id="username" placeholder="Adın (not için zorunlu)">
 
   <textarea id="note" placeholder="Notunu yaz..."></textarea>
 
@@ -80,7 +80,7 @@
   <div id="list"></div>
 
   <script>
-    // 🔴 BURAYI KENDİ CLOUDINARY BİLGİLERİNLE KULLAN
+    // 🔴 CLOUDINARY BİLGİLERİ
     const CLOUD_NAME = "dwqd9yu0z";
     const UPLOAD_PRESET = "merve321";
     const ADMIN_EMAIL = "meevedemir@gmail.com";
@@ -133,13 +133,13 @@
 
     load();
 
-    // 📝 NOT GÖNDER
+    // 📝 NOT GÖNDER (isim zorunlu)
     document.getElementById("noteBtn").onclick = () => {
       const user = usernameInput.value.trim();
       const note = noteInput.value.trim();
 
       if (!user || !note) {
-        alert("Ad ve not zorunlu");
+        alert("Not gönderirken ad ve not zorunlu");
         return;
       }
 
@@ -159,14 +159,19 @@ ${note}`;
       noteInput.value = "";
     };
 
-    // 📸 CLOUDINARY MEDYA YÜKLEME
+    // 📸 MEDYA YÜKLE (isim zorunlu değil)
     document.getElementById("uploadBtn").onclick = async () => {
-      const user = usernameInput.value.trim();
+      let user = usernameInput.value.trim();
       const files = mediaInput.files;
 
-      if (!user || files.length === 0) {
-        alert("Ad ve en az 1 medya seçmelisin");
+      if (files.length === 0) {
+        alert("En az 1 medya seçmelisin");
         return;
+      }
+
+      // isim boşsa anonim
+      if (!user) {
+        user = "Anonim";
       }
 
       for (const file of files) {
@@ -211,3 +216,4 @@ ${note}`;
 
 </body>
 </html>
+
