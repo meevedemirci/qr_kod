@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medya + Not Gönder</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background: pink;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #e65a68;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    img, video {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 6px;
+    }
+
+    .name {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .note {
+      background: #f2f2f2;
+      padding: 8px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2><i>Fotoğraf ve Videolarınızı Bekliyoruz</i></h2>
+
+  <input
+    type="text"
+    id="username"
+    placeholder="Adın (zorunlu)"
+  >
+
+  <textarea
+    id="note"
+    placeholder="Notunu yaz..."
+  ></textarea>
+ <br><br>
+  <input 
+    type="file"
+    id="media"
+    accept="image/*,video/*"
+    multiple
+    size="100"
+  >
+  <br><br>
+
+  <button id="uploadBtn">Fotoğraf ve Video Yükle</button>
+  <button id="noteBtn"> Notunu Gönder</button>
+
+  <hr>
+
+  <h3> Gönderilenler</h3>
+  <div id="list"></div>
+
+  <script>
+    const CLOUD_NAME = "dwqd9yu0z";
+    const UPLOAD_PRESET = "merve321";
+    const ADMIN_EMAIL = "meevedemir@gmail.com";
+
+    const usernameInput = document.getElementById("username");
+    const noteInput = document.getElementById("note");
+    const mediaInput = document.getElementById("media");
+    const list = document.getElementById("list");
+
+    // 🧠 localStorage
+    function save(item) {
+      const arr = JSON.parse(localStorage.getItem("messages")) || [];
+      arr.push(item);
+      localStorage.setItem("messages", JSON.stringify(arr));
+    }
+
+    function load() {
+      const arr = JSON.parse(localStorage.getItem("messages")) || [];
+      arr.forEach(render);
+    }
+
+    function render(item) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `<div class="name">👤 ${item.user}</div>`;
+
+      if (item.note) {
+        const n = document.createElement("div");
+        n.className = "note";
+        n.textContent = item.note;
+        card.appendChild(n);
+      }
+
+      if (item.url) {
+        if (item.type === "image") {
+          const img = document.createElement("img");
+          img.src = item.url;
+          card.appendChild(img);
+        } else {
+          const video = document.createElement("video");
+          video.src = item.url;
+          video.controls = true;
+          card.appendChild(video);
+        }
+      }
+
+      list.prepend(card);
+    }
+
+    // 🔄 Sayfa açılınca
+    load();
+
+    // 📝 NOT GÖNDER
+    document.getElementById("noteBtn").onclick = () => {
+      const user = usernameInput.value.trim();
+      const note = noteInput.value.trim();
+
+      if (!user || !note) {
+        alert("Ad ve not zorunlu");
+        return;
+      }
+
+      const item = { user, note };
+      save(item);
+      render(item);
+
+      // 📧 MAIL AÇ
+      const mailBody =
+`Gönderen: ${user}
+
+Not:
+${note}`;
+
+      window.location.href =
+        `mailto:${ADMIN_EMAIL}?subject=Yeni Not&body=${encodeURIComponent(mailBody)}`;
+
+      noteInput.value = "";
+    };
+
+    // 📸 MEDYA YÜKLE
+    document.getElementById("uploadBtn").onclick = async () => {
+      const user = usernameInput.value.trim();
+      const files = mediaInput.files;
+
+      if (!user || files.length === 0) {
+        alert("Ad ve en az 1 medya seçmelisin");
+        return;
+      }
+
+      for (const file of files) {
+        const type = file.type.startsWith("video") ? "video" : "image";
+        const formData = new FormData();
+
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${type}/upload`,
+          { method: "POST", body: formData }
+        );
+
+        const data = await res.json();
+
+        const item = {
+          user,
+          url: data.secure_url,
+          type
+        };
+
+        save(item);
+        render(item);
+      }
+
+      mediaInput.value = "";
+    };
+  </script>
+
+</body>
+</html>
